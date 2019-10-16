@@ -64,12 +64,13 @@ _3d_values vector_map[1000];
 _3d_values normal_map[1000];
 _3d_values face_map[1000];
 _2d_values texture_map[1000];
-            // 0               1                 2
+queue<string> textures;
+
 enum State{SMOOTH_UNTEXTURED, SMOOTH_TEXTURED, UNSMOOTH_TEXTURED};
 int ppm_width;
 int ppm_height;
 int v_n_count =0, v_count =0, f_count = 0, vt_count = 0, su_count = 0, st_count = 0, ut_count =0;
-int bkg_check = 0, eye_check = 0, up_check =0, view_check =0, mtl_check =0, vf_check = 0, w_h = 0;
+int bkg_check = 0, eye_check = 0, up_check =0, view_check =0, mtl_check =0, old_mtl_check = 0, vf_check = 0, w_h = 0;
 
 /*This method sets all of the values read from the input file and checks for error correction */
 void set_coords(string coords) {
@@ -117,18 +118,29 @@ void set_coords(string coords) {
         }
     }else if((coords.find("mtlcolor") != string::npos)) {
         mtl_check++;
-        mtlcolor.x = atof(elements.at(1).c_str());mtlcolor.y = atof(elements.at(2).c_str());mtlcolor.z = atof(elements.at(3).c_str());
-        sptcolor.x = atof(elements.at(4).c_str());sptcolor.y = atof(elements.at(5).c_str());sptcolor.z = atof(elements.at(6).c_str());
-        ka = (float)atof(elements.at(7).c_str());kd = (float)atof(elements.at(8).c_str());ks = (float)atof(elements.at(9).c_str());
-        n = (float)atof(elements.at(10).c_str());
-        if(mtlcolor.x < 0 || mtlcolor.x > 1 ||  mtlcolor.y < 0 || mtlcolor.y > 1 ||  mtlcolor.z < 0 || mtlcolor.z > 1 ||
-           sptcolor.x < 0 || sptcolor.x > 1 ||  sptcolor.y < 0 || sptcolor.y > 1 ||  sptcolor.z < 0 || sptcolor.z > 1) {
+        mtlcolor.x = atof(elements.at(1).c_str());
+        mtlcolor.y = atof(elements.at(2).c_str());
+        mtlcolor.z = atof(elements.at(3).c_str());
+        sptcolor.x = atof(elements.at(4).c_str());
+        sptcolor.y = atof(elements.at(5).c_str());
+        sptcolor.z = atof(elements.at(6).c_str());
+        ka = (float) atof(elements.at(7).c_str());
+        kd = (float) atof(elements.at(8).c_str());
+        ks = (float) atof(elements.at(9).c_str());
+        n = (float) atof(elements.at(10).c_str());
+        if (mtlcolor.x < 0 || mtlcolor.x > 1 || mtlcolor.y < 0 || mtlcolor.y > 1 || mtlcolor.z < 0 || mtlcolor.z > 1 ||
+            sptcolor.x < 0 || sptcolor.x > 1 || sptcolor.y < 0 || sptcolor.y > 1 || sptcolor.z < 0 || sptcolor.z > 1) {
             cout << "color value may not be less than 0 or greater than 1 for 0-1 scale" << endl;
             exit(1);
         }
-        _3d_values s_colors(int(mtlcolor.x*255), int(mtlcolor.y*255),int(mtlcolor.z*255));
-        _3d_values sp_color(int(sptcolor.x*255), int(sptcolor.y*255), int(sptcolor.z*255));
+        _3d_values s_colors(int(mtlcolor.x * 255), int(mtlcolor.y * 255), int(mtlcolor.z * 255));
+        _3d_values sp_color(int(sptcolor.x * 255), int(sptcolor.y * 255), int(sptcolor.z * 255));
         // cout << s_colors.X << " " << s_colors.Y << " " << s_colors.Z << " " << endl;
+        // pop old colors out push new ones in
+        if (sphere_colors.size() != 0 && spt_colors.size() != 0) {
+            sphere_colors.pop();
+            spt_colors.pop();
+        }
         sphere_colors.push(s_colors);
         spt_colors.push(sp_color);
     }else {
@@ -391,6 +403,7 @@ void set_ppm(string str_input) {
         cout << "texture line should only have 4 elements";
         exit(1);
     }
+    textures.push(elements.at(1).c_str());
     ifstream ifstream1(elements.at(1).c_str());
     if(ifstream1.is_open()) {
         vector<string> ppm_values;
@@ -440,6 +453,7 @@ int main(int argc, char* argv[]) {
     State shade_state;
     while(!is.eof()) {
         getline(is, str_input);
+        if((str_input.find("#") != string::npos)) {} // IGNORE COMMENT
         if((str_input.find("eye") != string::npos)     ||
            (str_input.find("viewdir") != string::npos) ||
            (str_input.find("updir") != string::npos)   ||
@@ -448,7 +462,12 @@ int main(int argc, char* argv[]) {
             set_coords(str_input);
         }
         if((str_input.find("texture") != string::npos)) {
-            set_ppm(str_input);
+            if(textures.size() == 0) {
+                set_ppm(str_input);
+                cout << textures.front() << endl;
+            }
+            else
+                textures.pop();
         }
         if((str_input.find("v ") != string::npos)||
            (str_input.find("f ") != string::npos)||
@@ -470,9 +489,6 @@ int main(int argc, char* argv[]) {
             Sphere* sphere1 = new Sphere(_3d_values(sphere.x, sphere.y, sphere.z), sphere.r, sphere_color, spec_light, ka, kd, ks,n);
             cout << spec_light.X << " " << spec_light.Y << " " << spec_light.Z << endl;
             objects.push_back(sphere1);
-            //spheres.push_back(sphere1);
-            sphere_colors.pop();
-            spt_colors.pop();
         }
         if((str_input.find("imsize") != string::npos))
             setWidth_Height(str_input);

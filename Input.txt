@@ -6,20 +6,10 @@ imsize 800 800
 bkgcolor 0.2 .2 .2
 mtlcolor 0 1 0 .8 .8 .8 .2 1 .4 50
 sphere 0 0 0 1
-mtlcolor 0 1 0 .8 .8 .8 .2 1 .4 50
 sphere -1 3 0 1
-light 0 -1 0 0 1 1 1
-v 0 1 0
-v 2 1 0
-v 2  3 0
-v 0 3 0
-vt 0 1
-vt 1 1
-vt 1 0
-vt 0 0
-vn 1 -.5 0
-vn 1 1 -1
-vn 1 0 1
-f 1//1 2//2 3//3
-f 1//1 3//3 4//4
+mtlcolor 1 0 0 .8 .8 .8 .2 1 .4 50
+sphere 2 0 0 .4
+sphere -2 0 0 .4
+
 texture snail.ppm
+light 0 -1 0 0 1 1 1

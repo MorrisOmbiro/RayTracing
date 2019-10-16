@@ -127,9 +127,9 @@ public:
                                              o->get_light() * ks * pow(fmax(0, N.dot(H)), n)) * shadow_strength;
                             }
                         }else {
-                            _2d_values tex_coords = o->get_texture_coords(POI, int(width), int(height));
-                            _3d_values c = a[tex_coords.X][tex_coords.Y];
-                            sum = sum + ((c * kd * fmax(0, (N.dot(L)))) +
+                            //_2d_values tex_coords = o->get_texture_coords(POI, int(width), int(height));
+                            //_3d_values c = a[tex_coords.X][tex_coords.Y];
+                            sum = sum + ((o->get_color() * kd * fmax(0, (N.dot(L)))) +
                                          o->get_light() * ks * pow(fmax(0, N.dot(H)), n)) * shadow_strength;
                         }
                     }
@@ -154,9 +154,9 @@ public:
                         color.Z = fmin(1, temp_color.Z / 255) * 255;
                     }
                 }else {
-                    _2d_values tex_coords = o->get_texture_coords(POI, int(width), int(height));
-                    _3d_values c = a[tex_coords.X][tex_coords.Y];
-                    temp_color = (c * ka) + sum;
+                    //_2d_values tex_coords = o->get_texture_coords(POI, int(width), int(height));
+                    // _3d_values c = a[tex_coords.X][tex_coords.Y];
+                    temp_color = (o->get_color() * ka) + sum;
                     // clamp Iλ values to 1
                     color.X = fmin(1, temp_color.X / 255) * 255;
                     color.Y = fmin(1, temp_color.Y / 255) * 255;
