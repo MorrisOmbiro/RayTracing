@@ -49,7 +49,7 @@ public:
     _3d_values Shade_Ray(float width, float height, Ray_Vector ray, float &t, _3d_values background_color,
                          vector<Objects*> objects, _3d_values** a, _3d_values view_dir,
                          vector<Light> lights, vector<AttenuationLight> att_lights) {
-        _3d_values color = background_color * view_dir.cal_angle(ray.get_direction());
+        _3d_values color = background_color;// * view_dir.cal_angle(ray.get_direction());
         vector<_3d_values> summation;
         // Sphere s(_3d_values(0, 0, 0), 0, _3d_values(0, 0, 0), _3d_values(0, 0, 0), 0, 0, 0,0);
         Objects* o;
@@ -90,11 +90,33 @@ public:
                         _3d_values H = (L + ray.get_origin()).normalize();
                         // normalize view_dir and normal from the sphere
                         ray_dir = ray_dir.normalize();
-                        _2d_values tex_coords = o->get_texture_coords(POI, int(width), int(height));
-                        _3d_values c = a[tex_coords.X][tex_coords.Y];
-                        // sum the part of the Phong model that will be added to ka*Od(lambda)
-                        sum = sum + ((c * kd * fmax(0, (N.dot(L)))) +
-                                     o->get_light() * ks * pow(fmax(0, N.dot(H)), n)) * attn * shadow_strength;
+                        shadow_strength = shadow(l, POI, objects, t, l.get_w());
+                        Triangle* triangle = new Triangle();
+                        if(typeid(*o) == typeid(*triangle)) {
+                            // IF UNTEXTURED
+                            if((o->get_vt1().X == 0 && o->get_vt1().Y == 0) &&
+                               (o->get_vt2().X == 0 && o->get_vt2().Y == 0) &&
+                               (o->get_vt3().X == 0 && o->get_vt3().Y == 0)) {
+                                sum = sum + ((o->get_color() * kd * fmax(0, (N.dot(L)))) +
+                                             o->get_light() * ks * pow(fmax(0, N.dot(H)), n)) ;//* shadow_strength;
+                            }else {
+                                _2d_values tex_coords = o->get_texture_coords(POI, int(width), int(height));
+                                _3d_values c = a[tex_coords.X][tex_coords.Y];
+                                sum = sum + ((c * kd * fmax(0, (N.dot(L)))) +
+                                             o->get_light() * ks * pow(fmax(0, N.dot(H)), n)) * shadow_strength;
+                            }
+                        }else {
+                            //_2d_values tex_coords = o->get_texture_coords(POI, int(width), int(height));
+                            //_3d_values c = a[tex_coords.X][tex_coords.Y];
+                            if(o->get_color().X == 0 && o->get_color().Y == 0 && o->get_color().Z == 0) { // textured sphere
+                                _2d_values tex_coords = o->get_texture_coords(POI, int(width), int(height));
+                                _3d_values c = a[tex_coords.X][tex_coords.Y];
+                                sum = sum + ((c * kd * fmax(0, (N.dot(L)))) +
+                                             o->get_light() * ks * pow(fmax(0, N.dot(H)), n)) * shadow_strength;
+                            }else
+                                sum = sum + ((o->get_color() * kd * fmax(0, (N.dot(L)))) +
+                                             o->get_light() * ks * pow(fmax(0, N.dot(H)), n)) * shadow_strength;
+                        }
                     }
                 }else {
                     _3d_values dir_L = (lights[0].get_pos() - POI).normalize();
@@ -119,7 +141,7 @@ public:
                                     (o->get_vt2().X == 0 && o->get_vt2().Y == 0) &&
                                     (o->get_vt3().X == 0 && o->get_vt3().Y == 0)) {
                                 sum = sum + ((o->get_color() * kd * fmax(0, (N.dot(L)))) +
-                                             o->get_light() * ks * pow(fmax(0, N.dot(H)), n)) * shadow_strength;
+                                             o->get_light() * ks * pow(fmax(0, N.dot(H)), n)) ;//* shadow_strength;
                             }else {
                                 _2d_values tex_coords = o->get_texture_coords(POI, int(width), int(height));
                                 _3d_values c = a[tex_coords.X][tex_coords.Y];
