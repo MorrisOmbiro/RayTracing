@@ -282,10 +282,10 @@ public:
         _3d_values nv2 = get_nv2();
         _3d_values nv3 = get_nv3();
 
-        if((nv1.X == 0 && nv1.Y == 0 && nv1.Z == 0) &&   // flat shading
+ /*       if((nv1.X == 0 && nv1.Y == 0 && nv1.Z == 0) &&   // flat shading
             (nv2.X == 0 && nv2.Y == 0 && nv2.Z == 0) &&
                     (nv3.X == 0 && nv3.Y == 0 && nv3.Z == 0))
-        return (v2-v1).cross((v3-v1));
+        return (v2-v1).cross((v3-v1));*/
 
         double L1 = (v2 - v1).magnitude();
         double L2 = (v3 - v2).magnitude();
