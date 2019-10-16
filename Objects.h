@@ -10,25 +10,18 @@ class Objects {
 public:
     virtual bool intersect(Ray_Vector& ray, float &t) {}
     virtual _3d_values get_normal(_3d_values vector) {}
-    virtual _3d_values get_color(){
-    }
-    virtual _3d_values get_light() {
-    }
-    virtual _3d_values get_center() {
-    }
-    virtual float get_radius() {
-    }
-    virtual float get_ka() {
-    }
-    virtual float get_kd() {
-    }
-    virtual float get_ks() {
-    }
-    virtual float get_n() {
-    }
-    virtual _2d_values get_texture_coords(_3d_values vector, int w, int h) {
-
-    }
+    virtual _3d_values get_color(){}
+    virtual _3d_values get_light() {}
+    virtual _3d_values get_center() {}
+    virtual float get_radius() {}
+    virtual float get_ka() {}
+    virtual float get_kd() {}
+    virtual float get_ks() {}
+    virtual float get_n() {}
+    virtual _2d_values get_texture_coords(_3d_values vector, int w, int h) {}
+    virtual _2d_values get_vt1() {}
+    virtual _2d_values get_vt2() {}
+    virtual _2d_values get_vt3() {}
 };
 
 /*Object element: sphere */

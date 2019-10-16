@@ -112,20 +112,56 @@ public:
                         ray_dir = ray_dir.normalize();
                         // N = N.normalize();
                         shadow_strength = shadow(l, POI, objects, t, l.get_w());
-                        _2d_values tex_coords = o->get_texture_coords(POI, int(width), int(height));
-                        _3d_values c = a[tex_coords.X][tex_coords.Y];
-                        // cout << c.X << " " << c.Y << " " << c.Z << endl;
-                        sum = sum + ((c * kd * fmax(0, (N.dot(L)))) +
-                                     o->get_light() * ks * pow(fmax(0, N.dot(H)), n)) * shadow_strength;
+                        Triangle* triangle = new Triangle();
+                        if(typeid(*o) == typeid(*triangle)) {
+                            // IF UNTEXTURED
+                            if((o->get_vt1().X == 0 && o->get_vt1().Y == 0) &&
+                                    (o->get_vt2().X == 0 && o->get_vt2().Y == 0) &&
+                                    (o->get_vt3().X == 0 && o->get_vt3().Y == 0)) {
+                                sum = sum + ((o->get_color() * kd * fmax(0, (N.dot(L)))) +
+                                             o->get_light() * ks * pow(fmax(0, N.dot(H)), n)) * shadow_strength;
+                            }else {
+                                _2d_values tex_coords = o->get_texture_coords(POI, int(width), int(height));
+                                _3d_values c = a[tex_coords.X][tex_coords.Y];
+                                sum = sum + ((c * kd * fmax(0, (N.dot(L)))) +
+                                             o->get_light() * ks * pow(fmax(0, N.dot(H)), n)) * shadow_strength;
+                            }
+                        }else {
+                            _2d_values tex_coords = o->get_texture_coords(POI, int(width), int(height));
+                            _3d_values c = a[tex_coords.X][tex_coords.Y];
+                            sum = sum + ((c * kd * fmax(0, (N.dot(L)))) +
+                                         o->get_light() * ks * pow(fmax(0, N.dot(H)), n)) * shadow_strength;
+                        }
                     }
                 }
-                /*Triangle* triangle = new Triangle();
-                 if(typeid(*obj) == typeid(*triangle)) {*/
-                 _2d_values tex_coords = o->get_texture_coords(POI, int(width), int(height));
-                 _3d_values c = a[tex_coords.X][tex_coords.Y];
-                 temp_color = (c * ka) + sum;
-                // clamp Iλ values to 1
-                color.X = fmin(1, temp_color.X/255)*255;color.Y = fmin(1, temp_color.Y/255)*255;color.Z = fmin(1, temp_color.Z/255)*255;
+                Triangle* triangle = new Triangle();
+                if(typeid(*o) == typeid(*triangle)) {
+                    if((o->get_vt1().X == 0 && o->get_vt1().Y == 0) &&
+                       (o->get_vt2().X == 0 && o->get_vt2().Y == 0) &&
+                       (o->get_vt3().X == 0 && o->get_vt3().Y == 0)) {
+                        temp_color = (o->get_color()* ka) + sum;
+                        // clamp Iλ values to 1
+                        color.X = fmin(1, temp_color.X / 255) * 255;
+                        color.Y = fmin(1, temp_color.Y / 255) * 255;
+                        color.Z = fmin(1, temp_color.Z / 255) * 255;
+                    }else  {
+                        _2d_values tex_coords = o->get_texture_coords(POI, int(width), int(height));
+                        _3d_values c = a[tex_coords.X][tex_coords.Y];
+                        temp_color = (c * ka) + sum;
+                        // clamp Iλ values to 1
+                        color.X = fmin(1, temp_color.X / 255) * 255;
+                        color.Y = fmin(1, temp_color.Y / 255) * 255;
+                        color.Z = fmin(1, temp_color.Z / 255) * 255;
+                    }
+                }else {
+                    _2d_values tex_coords = o->get_texture_coords(POI, int(width), int(height));
+                    _3d_values c = a[tex_coords.X][tex_coords.Y];
+                    temp_color = (c * ka) + sum;
+                    // clamp Iλ values to 1
+                    color.X = fmin(1, temp_color.X / 255) * 255;
+                    color.Y = fmin(1, temp_color.Y / 255) * 255;
+                    color.Z = fmin(1, temp_color.Z / 255) * 255;
+                }
             }
         }
         return color;
