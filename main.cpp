@@ -36,13 +36,10 @@ struct Light_Struct {
 };
 
 struct Triangle_Elements {
-    multimap<_3d_values, _3d_values> triangles;
-    multimap<_3d_values, _3d_values> triangles2;
-    // map<_3d_values, _3d_values> triangles; // keep a mapping of vertices and face for each triangle
     queue<_3d_values> vertices;
     queue<_3d_values> normal_vertices;
     queue<_3d_values> faces;
-    _2d_values vt1, vt2, vt3, vt4;
+    queue<_2d_values> texture_coords;
 };
 
 struct Light_Att_Struct {
@@ -61,11 +58,16 @@ queue<_3d_values> spt_colors;
 queue<Light> many_lights;
 queue<AttenuationLight> many_a_lights;
 _3d_values** a;
+queue<_3d_values> texture_picker;
 _3d_values vector_map[1000];
+_3d_values normal_map[1000];
 _3d_values face_map[1000];
+_2d_values texture_map[1000];
+            // 0               1                 2
+enum State{SMOOTH_UNTEXTURED, SMOOTH_TEXTURED, UNSMOOTH_TEXTURED};
 int ppm_width;
 int ppm_height;
-int v_n_count =0, v_count =0, f_count = 0, vt_count;
+int v_n_count =0, v_count =0, f_count = 0, vt_count = 0, su_count = 0, st_count = 0, ut_count =0;
 int bkg_check = 0, eye_check = 0, up_check =0, view_check =0, mtl_check =0, vf_check = 0, w_h = 0;
 
 /*This method sets all of the values read from the input file and checks for error correction */
@@ -163,11 +165,6 @@ void set_triangle(string coords) {
     istringstream is(coords);
     for(string eye_coords; is >> eye_coords;)
         elements.push_back(eye_coords);
-    // input checking
-    if(coords.find("vfov") != string::npos) {
-        set_vfov(coords);
-        return;
-    }
 
     if(elements.size() != 4) {
         if(!strcmp(elements.at(0).c_str(), "vt")) { // textured coordinates
@@ -205,28 +202,53 @@ void set_triangle(string coords) {
         t.vertices.push(_3d_values(vertex.x, vertex.y, vertex.z));
         v_count++;
     }else if(!strcmp(elements.at(0).c_str(), "f")) { // the number of faces is the number of triangles
-        face.x = atof(elements.at(1).c_str());
-        face.y = atof(elements.at(2).c_str());
-        face.z = atof(elements.at(3).c_str());
-        t.faces.push(_3d_values(face.x, face.y, face.z));// = _3d_values(face.x, face.y, face.z);
-        f_count++;
+        cout << elements.at(1).c_str() << endl;
+        if((elements.at(1).length() == 5)) { // SMOOTH_TEXTURED
+            int x = (elements.at(1).at(2) - 48);
+            int y = (elements.at(2).at(2) - 48);
+            cout << x << " " << y << "???" << endl;
+
+            int d = (elements.at(1).at(0) - 48);
+            int e = (elements.at(2).at(0) - 48);
+            int f = (elements.at(3).at(0) - 48);
+
+            t.faces.push(_3d_values(d, e, f));
+            t.texture_coords.push(_2d_values(x, y));
+            st_count++;
+        }else if((elements.at(1).length() == 3)) { // UNSMOOTH_TEXTURED
+            int x = (elements.at(1).at(2) - 48);
+            int y = (elements.at(2).at(2) - 48);
+            int z = (elements.at(3).at(2) - 48);
+            texture_picker.push(_3d_values(x, y, z));
+            int d = (elements.at(1).at(0) - 48);int e = (elements.at(2).at(0) - 48);
+            int f = (elements.at(3).at(0) - 48);
+            t.faces.push(_3d_values(d, e, f));
+            ut_count++;
+        }else if((elements.at(1)).find("//") != string::npos) { // SMOOTH_UNTEXTURED
+            cout << elements.at(1) << " HOW?"<< endl;
+            int a = (elements.at(1).at(0) - 48);
+            int b = (elements.at(2).at(0) - 48);
+            int c = (elements.at(3).at(0) - 48);
+            t.normal_vertices.push(_3d_values(a, b, c));
+            su_count++;
+        }else {
+            face.x = atof(elements.at(1).c_str());
+            face.y = atof(elements.at(2).c_str());
+            face.z = atof(elements.at(3).c_str());
+            t.faces.push(_3d_values(face.x, face.y, face.z));// = _3d_values(face.x, face.y, face.z);
+            f_count++;
+        }
     }else if(!strcmp(elements.at(0).c_str(), "vn")) {
-        cout << elements.at(0).c_str() << endl;
         v_norm.x = atof(elements.at(1).c_str());
         v_norm.y = atof(elements.at(2).c_str());
         v_norm.z = atof(elements.at(3).c_str());
         t.normal_vertices.push(_3d_values(v_norm.x, v_norm.y, v_norm.z));
         v_n_count++;
     }else if(!strcmp(elements.at(0).c_str(), "vt")) { // check here for more modifications
-        //v_t.x = atoi(elements.at(1).c_str());
-        //v_t.y = atoi(elements.at(2).c_str());
-        //vt_count++;
-        //if(vt_count % 3 == 1)
-        //    t.vt1 = _2d_values(v_t.x, v_t.y);
-        //if(vt_count % 3 == 2)
-        //     t.vt2 = _2d_values(v_t.x, v_t.y);
-        //if(vt_count % 3 == 0)
-        //    t.vt3 = _2d_values(v_t.x, v_t.y);
+        v_t.x = atoi(elements.at(1).c_str());
+        v_t.y = atoi(elements.at(2).c_str());
+        t.texture_coords.push(_2d_values(v_t.x, v_t.y));
+        vt_count++;
     }else {}
 }
 
@@ -413,6 +435,7 @@ int main(int argc, char* argv[]) {
     vector<Triangle> triangles;
     vector<Light> lights;
     vector<AttenuationLight> att_lights;
+    State shade_state;
     while(!is.eof()) {
         getline(is, str_input);
         if((str_input.find("eye") != string::npos)     ||
@@ -428,10 +451,12 @@ int main(int argc, char* argv[]) {
         if((str_input.find("v ") != string::npos)||
            (str_input.find("f ") != string::npos)||
            (str_input.find("vn ") != string::npos) ||
-           (str_input.find("vt ") != string::npos))
-            set_triangle(str_input);
-        if((str_input.find("vfov") != string::npos))
-            set_vfov(str_input);
+           (str_input.find("vt ") != string::npos)) {
+            if((str_input.find("vfov") != string::npos))
+                set_vfov(str_input);
+            else
+                set_triangle(str_input);
+        }
         if((str_input.find("sphere") != string::npos)) {
             set_sphere(str_input);
             if(sphere_colors.empty()) {
@@ -461,43 +486,246 @@ int main(int argc, char* argv[]) {
             }
         }
     } // once all of the values have been set
-
     cout << "v_count " << v_count << endl;
-    // vector_map = new _3d_values[v_count*10]; // store all the vertices
-    // face_map = new _3d_values[f_count*10]; // store all faces
-    int k = 0, l = 0;
-    // vectors
-    for(int i = 0; i < v_count; i++) {
-        _3d_values b = t.vertices.front();
-        // t.triangles.insert(make_pair(a, b));
-        vector_map[k++] = b;
-        t.vertices.pop();
-    }
+    if(ut_count > 0)
+        shade_state = UNSMOOTH_TEXTURED;
+    switch(shade_state) {
+        case SMOOTH_TEXTURED: {
+            cout << " HERE " << endl;
+            int k = 0, l = 0, m = 0, n = 0;
+            for (int i = 0; i < v_count; i++) {
+                vector_map[k++] = t.vertices.front();;
+                t.vertices.pop();
+            }
+            // faces
+            for (int i = 0; i < st_count; i++) {
+                face_map[l++] = t.faces.front();
+                t.faces.pop();
+            }
+            // normal vectors
+            for (int i = 0; i < st_count; i++) {
+                normal_map[m++] = t.normal_vertices.front();
+                t.normal_vertices.pop();
+            }
 
-    for( int i = 0; i < f_count; i++) {
-        _3d_values a = t.faces.front();
-        face_map[l++] = a;
-        t.faces.pop();
-    }
-    for(int i = 0; i < f_count; i++) {
-        cout << "Faces: " << face_map[i].X << " " << face_map[i].Y << " " << face_map[i].Z << endl;
-    }
-    cout << f_count << endl;
-    for(int i = 0; i < f_count; i++) {
-        _3d_values val1 = vector_map[int(face_map[i].X)-1];
-        _3d_values val2 = vector_map[int(face_map[i].Y)-1];
-        _3d_values val3 = vector_map[int(face_map[i].Z)-1];
-        // number of triangles to make
-        Triangle* triangle = new Triangle(val1, val2, val3, // regular vectors
-                                _3d_values(1, -.5, 0), _3d_values(1, 1, -1), _3d_values(1, 0, 1), // normal vectors
-                                _3d_values(face_map[i].X, face_map[i].Y, face_map[i].Z), // face
-                                _3d_values(255, 50, 20), _3d_values(204,204,204),  // color, spec light
-                                ka, kd, ks, n,                                      // phong model elements
-                                _2d_values(0, 1), _2d_values(1, 1), _2d_values(1, 0)); // add a check to ensure these are not negative
-        cout << "V1: " << val1.X << " " << val1.Y << " " << val1.Z << "\n"
-             << "V2: " << val2.X << " " << val2.Y << " " << val2.Z << "\n"
-             << "V3: " << val3.X << " " << val3.Y << " " << val3.Z <<endl;
-        objects.push_back(triangle);
+            for (int i = 0; i < vt_count; i++) {
+                texture_map[n++] = t.texture_coords.front();
+                t.texture_coords.pop();
+            }
+
+            for (int i = 0; i < st_count; i++) {
+                cout << "Faces: " << face_map[i].X << " " << face_map[i].Y << " " << face_map[i].Z << endl;
+            }
+            cout << st_count << endl;
+            for (int i = 0; i < st_count; i++) {
+                _3d_values val1 = vector_map[int(face_map[i].X) - 1];
+                _3d_values val2 = vector_map[int(face_map[i].Y) - 1];
+                _3d_values val3 = vector_map[int(face_map[i].Z) - 1];
+                _3d_values nval1 = normal_map[int(face_map[i].X) - 1];
+                _3d_values nval2 = normal_map[int(face_map[i].Y) - 1];
+                _3d_values nval3 = normal_map[int(face_map[i].Z) - 1];
+                _2d_values vt1 = texture_map[(int)texture_picker.front().X - 1];
+                _2d_values vt2 = texture_map[(int)texture_picker.front().Y - 1];
+                _2d_values vt3 = texture_map[(int)texture_picker.front().Z - 1];
+                texture_picker.pop();
+
+                // number of triangles to make
+                Triangle *triangle = new Triangle(val1, val2, val3, // regular vectors
+                                                  nval1, nval2, nval3, // normal vectors
+                                                  _3d_values(face_map[i].X, face_map[i].Y, face_map[i].Z), // face
+                                                  _3d_values(255, 50, 20),
+                                                  _3d_values(204, 204, 204),  // color, spec light
+                                                  ka, kd, ks,
+                                                  n,                                      // phong model elements
+                                                  vt1, vt2, vt3); // add a check to ensure these are not negative
+                cout << "V1: " << val1.X << " " << val1.Y << " " << val1.Z << "\n"
+                     << "V2: " << val2.X << " " << val2.Y << " " << val2.Z << "\n"
+                     << "V3: " << val3.X << " " << val3.Y << " " << val3.Z << "\n"
+                     << "NV1: " << nval1.X << " " << nval1.Y << " " << nval1.Z << "\n"
+                     << "NV2: " << nval2.X << " " << nval2.Y << " " << nval2.Z << "\n"
+                     << "NV3: " << nval3.X << " " << nval3.Y << " " << nval3.Z << "\n"
+                     << "VT1: " << vt1.X << " " << vt1.Y << "\n"
+                     << "VT2: " << vt2.X << " " << vt2.Y << "\n"
+                     << "VT3: " << vt3.X << " " << vt3.Y << endl;
+                objects.push_back(triangle);
+            }
+        }
+            break;
+        case SMOOTH_UNTEXTURED:
+        {            cout << "SMOOTH UNTEXTURED" << endl;
+
+            int k = 0, l = 0, m = 0, n = 0;
+            for (int i = 0; i < v_count; i++) {
+                vector_map[k++] = t.vertices.front();;
+                t.vertices.pop();
+            }
+            // faces
+            for (int i = 0; i < f_count; i++) {
+                face_map[l++] = t.faces.front();
+                t.faces.pop();
+            }
+            // normal vectors
+            for (int i = 0; i < v_n_count; i++) {
+                normal_map[m++] = t.normal_vertices.front();
+                t.normal_vertices.pop();
+            }
+
+            for (int i = 0; i < vt_count; i++) {
+                texture_map[n++] = t.texture_coords.front();
+                t.texture_coords.pop();
+            }
+
+            for (int i = 0; i < f_count; i++) {
+                cout << "Faces: " << face_map[i].X << " " << face_map[i].Y << " " << face_map[i].Z << endl;
+            }
+            cout << f_count << endl;
+            for (int i = 0; i < f_count; i++) {
+                _3d_values val1 = vector_map[int(face_map[i].X) - 1];
+                _3d_values val2 = vector_map[int(face_map[i].Y) - 1];
+                _3d_values val3 = vector_map[int(face_map[i].Z) - 1];
+                _3d_values nval1 = normal_map[int(face_map[i].X) - 1];
+                _3d_values nval2 = normal_map[int(face_map[i].Y) - 1];
+                _3d_values nval3 = normal_map[int(face_map[i].Z) - 1];
+                _2d_values vt1 = texture_map[int(face_map[i].X) - 1];
+                _2d_values vt2 = texture_map[int(face_map[i].Y) - 1];
+                _2d_values vt3 = texture_map[int(face_map[i].Z) - 1];
+
+                // number of triangles to make
+                Triangle *triangle = new Triangle(val1, val2, val3, // regular vectors
+                                                  nval1, nval2, nval3, // normal vectors
+                                                  _3d_values(face_map[i].X, face_map[i].Y, face_map[i].Z), // face
+                                                  _3d_values(255, 50, 20),
+                                                  _3d_values(204, 204, 204),  // color, spec light
+                                                  ka, kd, ks,
+                                                  n,                                      // phong model elements
+                                                  vt1, vt2, vt3); // add a check to ensure these are not negative
+                cout << "V1: " << val1.X << " " << val1.Y << " " << val1.Z << "\n"
+                     << "V2: " << val2.X << " " << val2.Y << " " << val2.Z << "\n"
+                     << "V3: " << val3.X << " " << val3.Y << " " << val3.Z << "\n"
+                     << "NV1: " << nval1.X << " " << nval1.Y << " " << nval1.Z << "\n"
+                     << "NV2: " << nval2.X << " " << nval2.Y << " " << nval2.Z << "\n"
+                     << "NV3: " << nval3.X << " " << nval3.Y << " " << nval3.Z << "\n"
+                     << "VT1: " << vt1.X << " " << vt1.Y << "\n"
+                     << "VT2: " << vt2.X << " " << vt2.Y << "\n"
+                     << "VT3: " << vt3.X << " " << vt3.Y << endl;
+                objects.push_back(triangle);
+            }
+        }
+            break;
+        case UNSMOOTH_TEXTURED: {
+            cout << "UNSMOOTH_TEXTURED" << endl;
+            int k = 0, l = 0, m = 0, n = 0;
+            for (int i = 0; i < v_count; i++) {
+                vector_map[k++] = t.vertices.front();;
+                t.vertices.pop();
+            }
+            // faces
+            for (int i = 0; i < ut_count; i++) {
+                face_map[l++] = t.faces.front();
+                t.faces.pop();
+            }
+
+            for (int i = 0; i < ut_count; i++) {
+                texture_map[n++] = t.texture_coords.front();
+                t.texture_coords.pop();
+            }
+
+            for (int i = 0; i < ut_count; i++) {
+                cout << "Faces: " << face_map[i].X << " " << face_map[i].Y << " " << face_map[i].Z << endl;
+            }
+            for (int i = 0; i < ut_count; i++) {
+                _3d_values val1 = vector_map[int(face_map[i].X) - 1];
+                _3d_values val2 = vector_map[int(face_map[i].Y) - 1];
+                _3d_values val3 = vector_map[int(face_map[i].Z) - 1];
+                _3d_values nval1(0,0,0);
+                _3d_values nval2(0,0,0);
+                _3d_values nval3(0,0,0);
+                cout << "Texture: " << texture_picker.front().X << " " << texture_picker.front().Y << " " << texture_picker.front().Z << " " << endl;
+                _2d_values vt1 = texture_map[(int)texture_picker.front().X - 1];
+                _2d_values vt2 = texture_map[(int)texture_picker.front().Y - 1];
+                _2d_values vt3 = texture_map[(int)texture_picker.front().Z - 1];
+
+                // number of triangles to make
+                Triangle *triangle = new Triangle(val1, val2, val3, // regular vectors
+                                                  nval1, nval2, nval3, // normal vectors
+                                                  _3d_values(face_map[i].X, face_map[i].Y, face_map[i].Z), // face
+                                                  _3d_values(255, 50, 20),
+                                                  _3d_values(204, 204, 204),  // color, spec light
+                                                  ka, kd, ks,
+                                                  n,                                      // phong model elements
+                                                  vt1, vt2, vt3); // add a check to ensure these are not negative
+                cout << "V1: " << val1.X << " " << val1.Y << " " << val1.Z << "\n"
+                     << "V2: " << val2.X << " " << val2.Y << " " << val2.Z << "\n"
+                     << "V3: " << val3.X << " " << val3.Y << " " << val3.Z << "\n"
+                     << "NV1: " << nval1.X << " " << nval1.Y << " " << nval1.Z << "\n"
+                     << "NV2: " << nval2.X << " " << nval2.Y << " " << nval2.Z << "\n"
+                     << "NV3: " << nval3.X << " " << nval3.Y << " " << nval3.Z << "\n"
+                     << "VT1: " << vt1.X << " " << vt1.Y << "\n"
+                     << "VT2: " << vt2.X << " " << vt2.Y << "\n"
+                     << "VT3: " << vt3.X << " " << vt3.Y << endl;
+                objects.push_back(triangle);
+            }
+        }
+            break;
+        default: {
+            cout << "IN DEFAULT" << endl;
+            int k = 0, l = 0, m = 0, n = 0;
+            for (int i = 0; i < v_count; i++) {
+                vector_map[k++] = t.vertices.front();;
+                t.vertices.pop();
+            }
+            // faces
+            for (int i = 0; i < f_count; i++) {
+                face_map[l++] = t.faces.front();
+                t.faces.pop();
+            }
+            // normal vectors
+            for (int i = 0; i < v_n_count; i++) {
+                normal_map[m++] = t.normal_vertices.front();
+                t.normal_vertices.pop();
+            }
+
+            for (int i = 0; i < vt_count; i++) {
+                texture_map[n++] = t.texture_coords.front();
+                t.texture_coords.pop();
+            }
+
+            for (int i = 0; i < f_count; i++) {
+                cout << "Faces: " << face_map[i].X << " " << face_map[i].Y << " " << face_map[i].Z << endl;
+            }
+            cout << f_count << endl;
+            for (int i = 0; i < f_count; i++) {
+                _3d_values val1 = vector_map[int(face_map[i].X) - 1];
+                _3d_values val2 = vector_map[int(face_map[i].Y) - 1];
+                _3d_values val3 = vector_map[int(face_map[i].Z) - 1];
+                _3d_values nval1 = normal_map[int(face_map[i].X) - 1];
+                _3d_values nval2 = normal_map[int(face_map[i].Y) - 1];
+                _3d_values nval3 = normal_map[int(face_map[i].Z) - 1];
+                _2d_values vt1 = texture_map[int(face_map[i].X) - 1];
+                _2d_values vt2 = texture_map[int(face_map[i].Y) - 1];
+                _2d_values vt3 = texture_map[int(face_map[i].Z) - 1];
+
+                // number of triangles to make
+                Triangle *triangle = new Triangle(val1, val2, val3, // regular vectors
+                                                  nval1, nval2, nval3, // normal vectors
+                                                  _3d_values(face_map[i].X, face_map[i].Y, face_map[i].Z), // face
+                                                  _3d_values(255, 50, 20),
+                                                  _3d_values(204, 204, 204),  // color, spec light
+                                                  ka, kd, ks,
+                                                  n,                                      // phong model elements
+                                                  vt1, vt2, vt3); // add a check to ensure these are not negative
+                cout << "V1: " << val1.X << " " << val1.Y << " " << val1.Z << "\n"
+                     << "V2: " << val2.X << " " << val2.Y << " " << val2.Z << "\n"
+                     << "V3: " << val3.X << " " << val3.Y << " " << val3.Z << "\n"
+                     << "NV1: " << nval1.X << " " << nval1.Y << " " << nval1.Z << "\n"
+                     << "NV2: " << nval2.X << " " << nval2.Y << " " << nval2.Z << "\n"
+                     << "NV3: " << nval3.X << " " << nval3.Y << " " << nval3.Z << "\n"
+                     << "VT1: " << vt1.X << " " << vt1.Y << "\n"
+                     << "VT2: " << vt2.X << " " << vt2.Y << "\n"
+                     << "VT3: " << vt3.X << " " << vt3.Y << endl;
+                objects.push_back(triangle);
+            }
+        }
     }
 
     cout << "Objects Size: " << objects.size() << endl;

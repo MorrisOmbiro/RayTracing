@@ -117,7 +117,6 @@ public:
                         // cout << c.X << " " << c.Y << " " << c.Z << endl;
                         sum = sum + ((c * kd * fmax(0, (N.dot(L)))) +
                                      o->get_light() * ks * pow(fmax(0, N.dot(H)), n)) * shadow_strength;
-
                     }
                 }
                 /*Triangle* triangle = new Triangle();

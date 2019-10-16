@@ -76,8 +76,8 @@ public:
     _2d_values get_texture_coords(_3d_values poi, int width, int height) {
         _3d_values c = get_center();
         float r = get_radius();
-        float phi = acosf((poi.Z-c.Z)/r);
-        float theta = atanf((poi.Y-c.Y)/(poi.X-c.X));
+        float phi = acos((poi.Z-c.Z)/r);
+        float theta = atan((poi.Y-c.Y)/(poi.X-c.X));
         float u = 0;
         if(theta < 0) {
             theta += 2*3.14159;
@@ -288,6 +288,12 @@ public:
         _3d_values nv1 = get_nv1();
         _3d_values nv2 = get_nv2();
         _3d_values nv3 = get_nv3();
+
+        if((nv1.X == 0 && nv1.Y == 0 && nv1.Z == 0) &&   // flat shading
+            (nv2.X == 0 && nv2.Y == 0 && nv2.Z == 0) &&
+                    (nv3.X == 0 && nv3.Y == 0 && nv3.Z == 0))
+        return (v2-v1).cross((v3-v1));
+
         double L1 = (v2 - v1).magnitude();
         double L2 = (v3 - v2).magnitude();
         double L3 = (v1 - v3).magnitude();
@@ -299,10 +305,9 @@ public:
         double alpha = a/Area;
         double beta = b/Area;
         double gamma = c/Area;
-        if(get_face().X < 10) { // flat shading
-            return (v2-v1).cross((v3-v1));
-        }else // smooth shading
-            return ((nv1*alpha + nv2*beta + nv3*gamma)*(1/(nv1*alpha + nv2*beta + nv3*gamma).magnitude()));
+
+        // smooth shading
+        return ((nv1*alpha + nv2*beta + nv3*gamma)*(1/(nv1*alpha + nv2*beta + nv3*gamma).magnitude()));
     }
 
     // barycentric coordinates
