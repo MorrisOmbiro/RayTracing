@@ -73,6 +73,7 @@ bool read_f = false;
 int GLOBAL_ST = 0;
 int GLOBAL_SU = 0;
 int GLOBAL_UT = 0;
+int DEFAULT = 0;
 vector<Objects*> objects;
 enum State{SMOOTH_UNTEXTURED, SMOOTH_TEXTURED, UNSMOOTH_TEXTURED};
 State shade_state;
@@ -300,16 +301,10 @@ void build_triangle(int state_chooser) {
             break;
         default: {
             cout << "IN DEFAULT" << endl;
-            int k = 0, l = 0, m = 0, n = 0;
-            for (int i = 0; i < v_count; i++) {
-                vector_map[k++] = t.vertices.front();;
-                t.vertices.pop();
-            }
             // faces
-            for (int i = 0; i < f_count; i++) {
-                face_map[l++] = t.faces.front();
-                t.faces.pop();
-            }
+            face_map[DEFAULT] = t.faces.front();
+            t.faces.pop();
+
             // normal vectors
             for (int i = 0; i < v_n_count; i++) {
                 normal_map[m++] = t.normal_vertices.front();
@@ -324,29 +319,27 @@ void build_triangle(int state_chooser) {
             for (int i = 0; i < f_count; i++) {
                 cout << "Faces: " << face_map[i].X << " " << face_map[i].Y << " " << face_map[i].Z << endl;
             }
-            cout << f_count << endl;
-            for (int i = 0; i < f_count; i++) {
-                _3d_values val1 = vector_map[int(face_map[i].X) - 1];
-                _3d_values val2 = vector_map[int(face_map[i].Y) - 1];
-                _3d_values val3 = vector_map[int(face_map[i].Z) - 1];
-                _3d_values nval1 = normal_map[int(face_map[i].X) - 1];
-                _3d_values nval2 = normal_map[int(face_map[i].Y) - 1];
-                _3d_values nval3 = normal_map[int(face_map[i].Z) - 1];
-                _2d_values vt1 = texture_map[int(face_map[i].X) - 1];
-                _2d_values vt2 = texture_map[int(face_map[i].Y) - 1];
-                _2d_values vt3 = texture_map[int(face_map[i].Z) - 1];
+            _3d_values val1 = vector_map[int(face_map[DEFAULT].X) - 1];
+            _3d_values val2 = vector_map[int(face_map[DEFAULT].Y) - 1];
+            _3d_values val3 = vector_map[int(face_map[DEFAULT].Z) - 1];
+            _3d_values nval1 = normal_map[int(face_map[DEFAULT].X) - 1];
+            _3d_values nval2 = normal_map[int(face_map[DEFAULT].Y) - 1];
+            _3d_values nval3 = normal_map[int(face_map[DEFAULT].Z) - 1];
+            _2d_values vt1 = texture_map[int(face_map[DEFAULT].X) - 1];
+            _2d_values vt2 = texture_map[int(face_map[DEFAULT].Y) - 1];
+            _2d_values vt3 = texture_map[int(face_map[DEFAULT].Z) - 1];
 
-                // number of triangles to make
-                Triangle *triangle = new Triangle(val1, val2, val3, // regular vectors
-                                                  nval1, nval2, nval3, // normal vectors
-                                                  _3d_values(face_map[i].X, face_map[i].Y, face_map[i].Z), // face
-                                                  _3d_values(255, 50, 20),
-                                                  _3d_values(204, 204, 204),  // color, spec light
-                                                  ka, kd, ks,
-                                                  n,                                      // phong model elements
-                                                  vt1, vt2, vt3); // add a check to ensure these are not negative
-                objects.push_back(triangle);
-            }
+            // number of triangles to make
+            Triangle *triangle = new Triangle(val1, val2, val3, // regular vectors
+                                              nval1, nval2, nval3, // normal vectors
+                                              _3d_values(face_map[DEFAULT].X, face_map[DEFAULT].Y, face_map[DEFAULT].Z), // face
+                                              _3d_values(255, 50, 20),
+                                              _3d_values(204, 204, 204),  // color, spec light
+                                              ka, kd, ks,
+                                              n,                                      // phong model elements
+                                              vt1, vt2, vt3); // add a check to ensure these are not negative
+            objects.push_back(triangle);
+            DEFAULT++;
         }
     }
 }
@@ -444,6 +437,7 @@ void set_triangle(string coords) {
             face.z = atof(elements.at(3).c_str());
             t.faces.push(_3d_values(face.x, face.y, face.z));// = _3d_values(face.x, face.y, face.z);
             f_count++;
+            build_triangle(4); // Go to default
         }
     }else if(!strcmp(elements.at(0).c_str(), "vn")) {
         v_norm.x = atof(elements.at(1).c_str());
@@ -746,20 +740,29 @@ int main(int argc, char* argv[]) {
     }
 
     // set the u and v
-    _3d_values u = (view_ray_dir.cross(up_dir)).normalize();
-    _3d_values v = (u.cross(view_ray_dir)).normalize();
-
+    _3d_values u = (view_ray_dir.cross(up_dir));
+    u = u.normalize();
+    _3d_values v = (u.cross(view_ray_dir));
+    v = v.normalize();
+    cout << "u: " << u.X << " " << u.Y << " " << u.Z <<endl;
+    cout << "v: " << v.X << " " << v.Y << " " << v.Z <<endl;
     // assuming vfov == vfoh
     float d = 5.0; // arbitrary
     float h = ceil((float(2 * d * tan(vfov * PI / 360.0))));
+    cout <<"h:  " << h << endl;
     // check viewieing window is ok using aspect ratio
     float asp = width/height;
+    cout << "This is the aspect ratio: " << asp << endl;
     float w = h * asp;
     // calculate the upper left of the view window
-    _3d_values ul = eye_dir + view_dir_norm * d - u * (w / 2) + v * (h / 2);
-    _3d_values ur = eye_dir + view_dir_norm * d + u * (w / 2) + v * (h / 2);
-    _3d_values ll = eye_dir + view_dir_norm * d - u * (w / 2) - v * (h / 2);
-    _3d_values lr = eye_dir + view_dir_norm * d + u * (w / 2) - v * (h / 2);
+    _3d_values ul = eye_dir + (view_dir_norm * d) - (u * (w / 2)) + (v * (h / 2));
+    _3d_values ur = eye_dir + (view_dir_norm * d) + (u * (w / 2)) + (v * (h / 2));
+    _3d_values ll = eye_dir + (view_dir_norm * d) - (u * (w / 2)) - (v * (h / 2));
+    _3d_values lr = eye_dir + (view_dir_norm * d) + (u * (w / 2)) - (v * (h / 2));
+
+
+    cout << "UL " << ul.X << " "  << ul.Y << " " << ul.Z << endl;
+
     // ∆h= (ur–ul)/(image_width_in_pixels–1)
     // ∆v= (ll–ul)/(image_height_in_pixels–1)
     float view_asp = (ur-ul).magnitude()/(ll-ul).magnitude();

@@ -90,7 +90,7 @@ public:
                         _3d_values H = (L + ray.get_origin()).normalize();
                         // normalize view_dir and normal from the sphere
                         ray_dir = ray_dir.normalize();
-                        shadow_strength = shadow(l, POI, objects, t, l.get_w());
+                        //shadow_strength = shadow(l, POI, objects, t, l.get_w());
                         Triangle* triangle = new Triangle();
                         if(typeid(*o) == typeid(*triangle)) {
                             // IF UNTEXTURED
@@ -103,7 +103,7 @@ public:
                                 _2d_values tex_coords = o->get_texture_coords(POI, int(width), int(height));
                                 _3d_values c = a[tex_coords.X][tex_coords.Y];
                                 sum = sum + ((c * kd * fmax(0, (N.dot(L)))) +
-                                             o->get_light() * ks * pow(fmax(0, N.dot(H)), n)) * shadow_strength;
+                                             o->get_light() * ks * pow(fmax(0, N.dot(H)), n));// * shadow_strength;
                             }
                         }else {
                             //_2d_values tex_coords = o->get_texture_coords(POI, int(width), int(height));
