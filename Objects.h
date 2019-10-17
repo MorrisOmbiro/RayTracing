@@ -173,11 +173,9 @@ public:
         double A = get_plane_normal().X;
         double B = get_plane_normal().Y;
         double C = get_plane_normal().Z;
-        // solve for D - use random vertex say p0
         double D = -(A*get_plane_v1().X + B*get_plane_v1().Y + C*get_plane_v1().Z);
-        // cout << ray.get_origin().X << " " << ray.get_origin().Y << " " << ray.get_origin().Z << endl;
+
         if((A*ray.get_direction().X + B*ray.get_direction().Y + C*ray.get_direction().Z) != 0) {
-            // cout << (A * ray.get_origin().X + B * ray.get_origin().Y + C * ray.get_origin().Z + D) << endl;
             t = -(A * ray.get_origin().X + B * ray.get_origin().Y + C * ray.get_origin().Z + D) /
                 (A * ray.get_direction().X + B * ray.get_direction().Y + C * ray.get_direction().Z);
         }
@@ -273,6 +271,7 @@ public:
         v = (alpha*vt1.Y + beta*vt2.Y + gamma *vt3.Y)*(height-1);
         return _2d_values(u, v);
     }
+    
     _3d_values get_normal(_3d_values poi) {
         _3d_values v1 = get_v1();
         _3d_values v2 = get_v2();
@@ -282,10 +281,6 @@ public:
         _3d_values nv2 = get_nv2();
         _3d_values nv3 = get_nv3();
 
- /*       if((nv1.X == 0 && nv1.Y == 0 && nv1.Z == 0) &&   // flat shading
-            (nv2.X == 0 && nv2.Y == 0 && nv2.Z == 0) &&
-                    (nv3.X == 0 && nv3.Y == 0 && nv3.Z == 0))
-        return (v2-v1).cross((v3-v1));*/
 
         double L1 = (v2 - v1).magnitude();
         double L2 = (v3 - v2).magnitude();

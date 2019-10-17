@@ -58,6 +58,7 @@ queue<_3d_values> spt_colors;
 queue<Light> many_lights;
 queue<AttenuationLight> many_a_lights;
 _3d_values** a;
+queue<_3d_values**> a_textures;  
 queue<_3d_values> texture_picker;
 queue<_3d_values> normal_picker;
 _3d_values vector_map[1000];
@@ -67,6 +68,7 @@ _2d_values texture_map[1000];
 _3d_values su_normal_pick[1000];
 _3d_values st_normal_pick[1000];
 _3d_values ut_normal_pick[1000];
+_3d_values dt_normal_pick[10000];
 queue<string> textures;
 
 bool read_f = false;
@@ -195,10 +197,9 @@ void build_triangle(int state_chooser) {
             face_map[st_count-1] = t.faces.front();
             t.faces.pop();
 
-            for (int i = 0; i < vt_count; i++) {
-                texture_map[k++] = t.texture_coords.front();
-                t.texture_coords.pop();
-            }
+            texture_map[GLOBAL_ST] = t.texture_coords.front();
+            t.texture_coords.pop();
+            
             st_normal_pick[GLOBAL_ST] = normal_picker.front();
             cout << st_count << endl;
                 _3d_values val1 = vector_map[int(face_map[GLOBAL_ST].X) - 1];
@@ -259,7 +260,7 @@ void build_triangle(int state_chooser) {
             Triangle *triangle = new Triangle(val1, val2, val3, // regular vectors
                                               nval1, nval2, nval3, // normal vectors
                                               _3d_values(face_map[GLOBAL_SU].X, face_map[GLOBAL_SU].Y, face_map[GLOBAL_SU].Z), // face
-                                              _3d_values(255, 50, 20),
+                                              _3d_values(150, 100, 255),
                                               _3d_values(204, 204, 204),  // color, spec light
                                               ka, kd, ks,n,                                      // phong model elements
                                               vt1, vt2, vt3); // add a check to ensure these are not negative
@@ -305,16 +306,9 @@ void build_triangle(int state_chooser) {
             face_map[DEFAULT] = t.faces.front();
             t.faces.pop();
 
-            // normal vectors
-            for (int i = 0; i < v_n_count; i++) {
-                normal_map[m++] = t.normal_vertices.front();
-                t.normal_vertices.pop();
-            }
 
-            for (int i = 0; i < vt_count; i++) {
-                texture_map[n++] = t.texture_coords.front();
-                t.texture_coords.pop();
-            }
+            dt_normal_pick[DEFAULT] = t.normal_vertices.front();
+            t.normal_vertices.pop();
 
             for (int i = 0; i < f_count; i++) {
                 cout << "Faces: " << face_map[i].X << " " << face_map[i].Y << " " << face_map[i].Z << endl;
@@ -322,12 +316,12 @@ void build_triangle(int state_chooser) {
             _3d_values val1 = vector_map[int(face_map[DEFAULT].X) - 1];
             _3d_values val2 = vector_map[int(face_map[DEFAULT].Y) - 1];
             _3d_values val3 = vector_map[int(face_map[DEFAULT].Z) - 1];
-            _3d_values nval1 = normal_map[int(face_map[DEFAULT].X) - 1];
-            _3d_values nval2 = normal_map[int(face_map[DEFAULT].Y) - 1];
-            _3d_values nval3 = normal_map[int(face_map[DEFAULT].Z) - 1];
-            _2d_values vt1 = texture_map[int(face_map[DEFAULT].X) - 1];
-            _2d_values vt2 = texture_map[int(face_map[DEFAULT].Y) - 1];
-            _2d_values vt3 = texture_map[int(face_map[DEFAULT].Z) - 1];
+            _3d_values nval1(0,0,0);
+            _3d_values nval2(0,0,0);
+            _3d_values nval3(0,0,0);
+            _2d_values vt1(0,0);
+            _2d_values vt2(0,0);
+            _2d_values vt3(0,0);
 
             // number of triangles to make
             Triangle *triangle = new Triangle(val1, val2, val3, // regular vectors
@@ -383,10 +377,21 @@ void set_triangle(string coords) {
     if(!strcmp(elements.at(0).c_str(), "v")) {
         if(read_f) {
             v_count = 0;
-            for(int i = 0; i < t.vertices.size(); i++)
-                t.vertices.pop();
-            for(int i = 0; i < t.faces.size(); i++)
-                t.faces.pop();
+            for(int i = 0; i < t.vertices.size(); i++) {
+                if(t.vertices.size() != 0)
+                    t.vertices.pop();
+            }
+            for(int i = 0; i < t.faces.size(); i++) {
+                if(t.faces.size() != 0)
+                    t.faces.pop();
+            }
+            if(t.texture_coords.size()!=0) {
+                cout << " Why are we here " << endl;
+            }
+            cout << t.texture_coords.size() << " Seg fault" << endl;
+            for(int i = 0 ; i < t.texture_coords.size(); i++) {
+                   //  t.texture_coords.pop(); 
+            }
             read_f = false;
         }
         cout << t.vertices.size() << endl;
@@ -626,6 +631,7 @@ void set_ppm(string str_input) {
                 a[i][j] = _3d_values(red, green, blue);
             }
         }
+        a_textures.push(a);
     }else {
         cout << "Invalid ppm file" << endl;
         exit(1);
@@ -686,6 +692,7 @@ int main(int argc, char* argv[]) {
             cout << spec_light.X << " " << spec_light.Y << " " << spec_light.Z << endl;
             objects.push_back(sphere1);
         }
+        
         if((str_input.find("imsize") != string::npos))
             setWidth_Height(str_input);
         if((str_input.find("light") != string::npos)) { // allow for multiple light

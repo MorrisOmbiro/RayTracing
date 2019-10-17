@@ -17,6 +17,7 @@ public:
         double no_hit = 0;
         int bundle_of_rays = 1; // samples
         // shadow ray from the ray/surface intersection point towards the light source(s)
+        float epsilon = .0001;
         Objects* obj;
         for(Objects* object: objects) {
             obj = object;
@@ -26,16 +27,27 @@ public:
                 // new = old + Epsilon*N
                 _3d_values rand_vec = (rand_point - obj->get_center()).normalize() * obj->get_radius();
                 if(type_light == 0) { // directional light
-                    // ray direction is negative of the light direction
-                    _3d_values shadow_ray = light.get_pos() * -1;// - (rand_vec + obj->get_center());
+                    _3d_values shadow_ray = light.get_pos() * -1;// (rand_vec + obj->get_center());
                     Ray_Vector ray(intersection_point, shadow_ray);
-                    if (obj->intersect(ray, k) && k > 0)
-                        hit_count++;
-                }else {
+                    if (obj->intersect(ray, k) && k > 0) {
+                        // Check for numerical errors 
+                        _3d_values new_poi = ray.get_origin() + ray.get_direction()*k; 
+                        if(abs((new_poi - intersection_point).magnitude()) > epsilon) {} // ignore numerical errors 
+                        else
+                            hit_count++;
+                    }
+                }else { // point light 
                     _3d_values shadow_ray = light.get_pos() - (rand_vec + obj->get_center());
+
+                    // check for ray/object intersection points whose positive distance is less than the distance to the light source 
+
                     Ray_Vector ray(intersection_point, shadow_ray);
-                    if (obj->intersect(ray, k) && k > 0) // in shadow
-                        hit_count++;
+                    if (obj->intersect(ray, k)) { // in shadow 
+                        _3d_values new_poi = ray.get_origin() + ray.get_direction()*k; 
+                         if(abs((new_poi - intersection_point).magnitude()) > epsilon) {} // ignore numerical errors 
+                         else 
+                           hit_count++;
+                    }
                 }
             }
         }
@@ -49,7 +61,7 @@ public:
     _3d_values Shade_Ray(float width, float height, Ray_Vector ray, float &t, _3d_values background_color,
                          vector<Objects*> objects, _3d_values** a, _3d_values view_dir,
                          vector<Light> lights, vector<AttenuationLight> att_lights) {
-        _3d_values color = background_color;// * view_dir.cal_angle(ray.get_direction());
+        _3d_values color = background_color * view_dir.cal_angle(ray.get_direction());
         vector<_3d_values> summation;
         // Sphere s(_3d_values(0, 0, 0), 0, _3d_values(0, 0, 0), _3d_values(0, 0, 0), 0, 0, 0,0);
         Objects* o;
