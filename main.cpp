@@ -58,7 +58,9 @@ queue<_3d_values> spt_colors;
 queue<Light> many_lights;
 queue<AttenuationLight> many_a_lights;
 _3d_values** a;
-queue<_3d_values**> a_textures;  
+_3d_values** pointer_to_a[100];
+int num_of_textures = 0;
+queue<_3d_values**> a_textures;
 queue<_3d_values> texture_picker;
 queue<_3d_values> normal_picker;
 _3d_values vector_map[1000];
@@ -199,36 +201,36 @@ void build_triangle(int state_chooser) {
 
             texture_map[GLOBAL_ST] = t.texture_coords.front();
             t.texture_coords.pop();
-            
+
             st_normal_pick[GLOBAL_ST] = normal_picker.front();
             cout << st_count << endl;
-                _3d_values val1 = vector_map[int(face_map[GLOBAL_ST].X) - 1];
-                _3d_values val2 = vector_map[int(face_map[GLOBAL_ST].Y) - 1];
-                _3d_values val3 = vector_map[int(face_map[GLOBAL_ST].Z) - 1];
-                _3d_values nval1 = normal_map[int(st_normal_pick[GLOBAL_ST].X) - 1];
-                _3d_values nval2 = normal_map[int(st_normal_pick[GLOBAL_ST].Y) - 1];
-                _3d_values nval3 = normal_map[int(st_normal_pick[GLOBAL_ST].Z) - 1];
-                cout << "Normal: " << normal_picker.front().X << " " << normal_picker.front().Y << " " << normal_picker.front().Z << " " << endl;
-                _2d_values vt1 = texture_map[(int)texture_picker.front().X - 1];
-                _2d_values vt2 = texture_map[(int)texture_picker.front().Y - 1];
-                _2d_values vt3 = texture_map[(int)texture_picker.front().Z - 1];
-                texture_picker.pop();
-                normal_picker.pop();
-                // number of triangles to make
-                Triangle *triangle = new Triangle(val1, val2, val3, // regular vectors
-                                                  nval1, nval2, nval3, // normal vectors
-                                                  _3d_values(face_map[GLOBAL_ST].X, face_map[GLOBAL_ST].Y, face_map[GLOBAL_ST].Z), // face
-                                                  _3d_values(255, 50, 20),
-                                                  _3d_values(204, 204, 204),  // color, spec light
-                                                  ka, kd, ks,
-                                                  n,                                      // phong model elements
-                                                  vt1, vt2, vt3); // add a check to ensure these are not negative
-                objects.push_back(triangle);
-                if(v_count == 3) {
-                    v_count = 0; // RESET FOR THE NEXT TRIANGLE :)
-                }
-                else
-                {}
+            _3d_values val1 = vector_map[int(face_map[GLOBAL_ST].X) - 1];
+            _3d_values val2 = vector_map[int(face_map[GLOBAL_ST].Y) - 1];
+            _3d_values val3 = vector_map[int(face_map[GLOBAL_ST].Z) - 1];
+            _3d_values nval1 = normal_map[int(st_normal_pick[GLOBAL_ST].X) - 1];
+            _3d_values nval2 = normal_map[int(st_normal_pick[GLOBAL_ST].Y) - 1];
+            _3d_values nval3 = normal_map[int(st_normal_pick[GLOBAL_ST].Z) - 1];
+            cout << "Normal: " << normal_picker.front().X << " " << normal_picker.front().Y << " " << normal_picker.front().Z << " " << endl;
+            _2d_values vt1 = texture_map[(int)texture_picker.front().X - 1];
+            _2d_values vt2 = texture_map[(int)texture_picker.front().Y - 1];
+            _2d_values vt3 = texture_map[(int)texture_picker.front().Z - 1];
+            texture_picker.pop();
+            normal_picker.pop();
+            // number of triangles to make
+            Triangle *triangle = new Triangle(val1, val2, val3, // regular vectors
+                                              nval1, nval2, nval3, // normal vectors
+                                              _3d_values(face_map[GLOBAL_ST].X, face_map[GLOBAL_ST].Y, face_map[GLOBAL_ST].Z), // face
+                                              _3d_values(255, 50, 20),
+                                              _3d_values(204, 204, 204),  // color, spec light
+                                              ka, kd, ks,
+                                              n,                                      // phong model elements
+                                              vt1, vt2, vt3, num_of_textures); // add a check to ensure these are not negative
+            objects.push_back(triangle);
+            if(v_count == 3) {
+                v_count = 0; // RESET FOR THE NEXT TRIANGLE :)
+            }
+            else
+            {}
 
             GLOBAL_ST++;
         }
@@ -263,7 +265,7 @@ void build_triangle(int state_chooser) {
                                               _3d_values(150, 100, 255),
                                               _3d_values(204, 204, 204),  // color, spec light
                                               ka, kd, ks,n,                                      // phong model elements
-                                              vt1, vt2, vt3); // add a check to ensure these are not negative
+                                              vt1, vt2, vt3, num_of_textures); // add a check to ensure these are not negative
             objects.push_back(triangle);
             GLOBAL_SU++;
         }
@@ -295,7 +297,7 @@ void build_triangle(int state_chooser) {
                                               _3d_values(204, 204, 204),  // color, spec light
                                               ka, kd, ks,
                                               n,                                      // phong model elements
-                                              vt1, vt2, vt3); // add a check to ensure these are not negative
+                                              vt1, vt2, vt3, num_of_textures); // add a check to ensure these are not negative
             objects.push_back(triangle);
 
         }
@@ -331,7 +333,7 @@ void build_triangle(int state_chooser) {
                                               _3d_values(204, 204, 204),  // color, spec light
                                               ka, kd, ks,
                                               n,                                      // phong model elements
-                                              vt1, vt2, vt3); // add a check to ensure these are not negative
+                                              vt1, vt2, vt3, num_of_textures); // add a check to ensure these are not negative
             objects.push_back(triangle);
             DEFAULT++;
         }
@@ -390,7 +392,7 @@ void set_triangle(string coords) {
             }
             cout << t.texture_coords.size() << " Seg fault" << endl;
             for(int i = 0 ; i < t.texture_coords.size(); i++) {
-                   //  t.texture_coords.pop(); 
+                //  t.texture_coords.pop();
             }
             read_f = false;
         }
@@ -615,23 +617,25 @@ void set_ppm(string str_input) {
         for(string str_in; is2 >> line_1;)
             ppm_values.push_back(line_1);
 
-        cout << ppm_values.size() << endl;
         ppm_width = stoi(ppm_values.at(1).c_str());
         ppm_height = stoi(ppm_values.at(2).c_str());
 
         int red, green, blue;
-        a = new _3d_values*[ppm_width];
+        //a = new _3d_values*[ppm_width];
+        cout << num_of_textures << endl;
+        pointer_to_a[num_of_textures] = new _3d_values*[ppm_width];
+
         // initialize pointer
         for(int i =0; i < ppm_width; i++)
-            a[i] =new _3d_values[ppm_height];
+            pointer_to_a[num_of_textures][i] = new _3d_values[ppm_height];
 
         for(int i  =0 ; i < ppm_width; i++) {
             for (int j = 0; j < ppm_height; j++) {
                 ifstream1 >> red >> green >> blue;
-                a[i][j] = _3d_values(red, green, blue);
+                pointer_to_a[num_of_textures][i][j] = _3d_values(red, green, blue);
             }
         }
-        a_textures.push(a);
+        num_of_textures++;
     }else {
         cout << "Invalid ppm file" << endl;
         exit(1);
@@ -688,11 +692,11 @@ int main(int argc, char* argv[]) {
             }
             _3d_values sphere_color = sphere_colors.front();
             _3d_values spec_light = spt_colors.front();
-            Sphere* sphere1 = new Sphere(_3d_values(sphere.x, sphere.y, sphere.z), sphere.r, sphere_color, spec_light, ka, kd, ks,n);
+            Sphere* sphere1 = new Sphere(_3d_values(sphere.x, sphere.y, sphere.z), sphere.r, sphere_color, spec_light, ka, kd, ks,n, num_of_textures-1);
             cout << spec_light.X << " " << spec_light.Y << " " << spec_light.Z << endl;
             objects.push_back(sphere1);
         }
-        
+
         if((str_input.find("imsize") != string::npos))
             setWidth_Height(str_input);
         if((str_input.find("light") != string::npos)) { // allow for multiple light
@@ -810,10 +814,15 @@ int main(int argc, char* argv[]) {
             _3d_values pixel = ul + (delta_h * j) + (delta_v * i) + delta_h * .5 + delta_v * .5;
             _3d_values ray_dir = (pixel - eye_dir).normalize();
             // return the pixel_color seen at the view window
-            pixel_color = r_t.Trace_Ray(ppm_width, ppm_height, eye_dir, ray_dir, background_color, objects, a, view_ray_dir, lights, att_lights);
+            pixel_color = r_t.Trace_Ray(ppm_width, ppm_height, eye_dir, ray_dir, background_color, objects, pointer_to_a, view_ray_dir, lights, att_lights);
             output << int(pixel_color.X) << ' ' << int(pixel_color.Y) << ' ' << int(pixel_color.Z) << "\n";
         }
     }
     output.close();
+    for (auto p : objects)
+    {
+        delete p;
+    }
+    objects.clear();
     return 0;
 }

@@ -22,6 +22,7 @@ public:
     virtual _2d_values get_vt1() {}
     virtual _2d_values get_vt2() {}
     virtual _2d_values get_vt3() {}
+    virtual int get_texture() {}
 };
 
 /*Object element: sphere */
@@ -30,10 +31,12 @@ class Sphere : public Objects{
 private:
     _3d_values Center, Color, Spec_Light;
     float R, KA, KD, KS, N;
+    int which_texture;
 public:
     // set constructor for default
-    Sphere(_3d_values center, float radius, _3d_values color, _3d_values spec_light, float ka, float kd, float ks, float n) :
-    Center(center), R(radius), Color(color), Spec_Light(spec_light), KA(ka), KD(kd), KS(ks), N(n) {}
+    Sphere(_3d_values center, float radius, _3d_values color, _3d_values spec_light, float ka, float kd, float ks, float n, int w) :
+    Center(center), R(radius), Color(color), Spec_Light(spec_light), KA(ka), KD(kd), KS(ks), N(n), which_texture(w) {}
+
     // return color
     _3d_values get_color(){
         return Color;
@@ -60,6 +63,9 @@ public:
         return N;
     }
 
+    int get_texture() {
+        return which_texture;
+    }
 
     // return the normal from a point on the sphere without using partial derivatives
     _3d_values get_normal(_3d_values POI) {
@@ -188,13 +194,14 @@ private:
     _3d_values Vertex1, Vertex2, Vertex3, N_Vertex1, N_Vertex2, N_Vertex3, Face, Color, Spec_Light;
     _2d_values V_T1, V_T2, V_T3;
     float KA, KD, KS, N; // phong model
+    int which_texture;
 public:
     Triangle() {}
     Triangle(_3d_values v1, _3d_values v2, _3d_values v3, _3d_values nv1, _3d_values nv2,
             _3d_values nv3,_3d_values f, _3d_values c, _3d_values s, float ka, float kd,
-            float ks, float n, _2d_values v_t1, _2d_values v_t2, _2d_values v_t3) :
+            float ks, float n, _2d_values v_t1, _2d_values v_t2, _2d_values v_t3, int w) :
     Vertex1(v1), Vertex2(v2), Vertex3(v3), N_Vertex1(nv1), N_Vertex2(nv2), N_Vertex3(nv3),Face(f), Color(c), Spec_Light(s),
-    KA(ka), KD(kd),KS(ks), N(n), V_T1(v_t1), V_T2(v_t2), V_T3(v_t3) {}
+    KA(ka), KD(kd),KS(ks), N(n), V_T1(v_t1), V_T2(v_t2), V_T3(v_t3), which_texture(w) {}
     _3d_values get_v1() {
         return Vertex1;
     }
@@ -234,6 +241,10 @@ public:
     float get_n() {
         return N;
     }
+    int get_texture() {
+        return which_texture;
+    }
+
     _2d_values get_vt1() {
         return V_T1;
     }_2d_values get_vt2() {
