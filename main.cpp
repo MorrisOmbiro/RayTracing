@@ -82,8 +82,8 @@ vector<Objects*> objects;
 enum State{SMOOTH_UNTEXTURED, SMOOTH_TEXTURED, UNSMOOTH_TEXTURED};
 State shade_state;
 
-int ppm_width;
-int ppm_height;
+int ppm_width = 0;
+int ppm_height = 0;
 int v_n_count =0, v_count =0, f_count = 0, vt_count = 0, su_count = 0, st_count = 0, ut_count =0;
 int bkg_check = 0, eye_check = 0, up_check =0, view_check =0, mtl_check =0, old_mtl_check = 0, vf_check = 0, w_h = 0;
 
@@ -224,7 +224,7 @@ void build_triangle(int state_chooser) {
                                               _3d_values(204, 204, 204),  // color, spec light
                                               ka, kd, ks,
                                               n,                                      // phong model elements
-                                              vt1, vt2, vt3, num_of_textures); // add a check to ensure these are not negative
+                                              vt1, vt2, vt3, num_of_textures, ppm_height, ppm_width); // add a check to ensure these are not negative
             objects.push_back(triangle);
             if(v_count == 3) {
                 v_count = 0; // RESET FOR THE NEXT TRIANGLE :)
@@ -265,7 +265,7 @@ void build_triangle(int state_chooser) {
                                               _3d_values(150, 100, 255),
                                               _3d_values(204, 204, 204),  // color, spec light
                                               ka, kd, ks,n,                                      // phong model elements
-                                              vt1, vt2, vt3, num_of_textures); // add a check to ensure these are not negative
+                                              vt1, vt2, vt3, num_of_textures, ppm_height, ppm_width); // add a check to ensure these are not negative
             objects.push_back(triangle);
             GLOBAL_SU++;
         }
@@ -297,7 +297,7 @@ void build_triangle(int state_chooser) {
                                               _3d_values(204, 204, 204),  // color, spec light
                                               ka, kd, ks,
                                               n,                                      // phong model elements
-                                              vt1, vt2, vt3, num_of_textures); // add a check to ensure these are not negative
+                                              vt1, vt2, vt3, num_of_textures, ppm_height, ppm_width); // add a check to ensure these are not negative
             objects.push_back(triangle);
 
         }
@@ -333,7 +333,7 @@ void build_triangle(int state_chooser) {
                                               _3d_values(204, 204, 204),  // color, spec light
                                               ka, kd, ks,
                                               n,                                      // phong model elements
-                                              vt1, vt2, vt3, num_of_textures); // add a check to ensure these are not negative
+                                              vt1, vt2, vt3, num_of_textures, ppm_height, ppm_width); // add a check to ensure these are not negative
             objects.push_back(triangle);
             DEFAULT++;
         }
@@ -692,7 +692,7 @@ int main(int argc, char* argv[]) {
             }
             _3d_values sphere_color = sphere_colors.front();
             _3d_values spec_light = spt_colors.front();
-            Sphere* sphere1 = new Sphere(_3d_values(sphere.x, sphere.y, sphere.z), sphere.r, sphere_color, spec_light, ka, kd, ks,n, num_of_textures-1);
+            Sphere* sphere1 = new Sphere(_3d_values(sphere.x, sphere.y, sphere.z), sphere.r, sphere_color, spec_light, ka, kd, ks,n, num_of_textures-1, ppm_height, ppm_width);
             cout << spec_light.X << " " << spec_light.Y << " " << spec_light.Z << endl;
             objects.push_back(sphere1);
         }
@@ -814,7 +814,7 @@ int main(int argc, char* argv[]) {
             _3d_values pixel = ul + (delta_h * j) + (delta_v * i) + delta_h * .5 + delta_v * .5;
             _3d_values ray_dir = (pixel - eye_dir).normalize();
             // return the pixel_color seen at the view window
-            pixel_color = r_t.Trace_Ray(ppm_width, ppm_height, eye_dir, ray_dir, background_color, objects, pointer_to_a, view_ray_dir, lights, att_lights);
+            pixel_color = r_t.Trace_Ray(eye_dir, ray_dir, background_color, objects, pointer_to_a, view_ray_dir, lights, att_lights);
             output << int(pixel_color.X) << ' ' << int(pixel_color.Y) << ' ' << int(pixel_color.Z) << "\n";
         }
     }

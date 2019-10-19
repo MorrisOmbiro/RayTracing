@@ -23,6 +23,8 @@ public:
     virtual _2d_values get_vt2() {}
     virtual _2d_values get_vt3() {}
     virtual int get_texture() {}
+    virtual int get_width() {}
+    virtual int get_height() {}
 };
 
 /*Object element: sphere */
@@ -31,11 +33,11 @@ class Sphere : public Objects{
 private:
     _3d_values Center, Color, Spec_Light;
     float R, KA, KD, KS, N;
-    int which_texture;
+    int which_texture, ppm_height, ppm_width;
 public:
     // set constructor for default
-    Sphere(_3d_values center, float radius, _3d_values color, _3d_values spec_light, float ka, float kd, float ks, float n, int w) :
-    Center(center), R(radius), Color(color), Spec_Light(spec_light), KA(ka), KD(kd), KS(ks), N(n), which_texture(w) {}
+    Sphere(_3d_values center, float radius, _3d_values color, _3d_values spec_light, float ka, float kd, float ks, float n, int w, int p_h, int p_w) :
+    Center(center), R(radius), Color(color), Spec_Light(spec_light), KA(ka), KD(kd), KS(ks), N(n), which_texture(w), ppm_height(p_h), ppm_width(p_w) {}
 
     // return color
     _3d_values get_color(){
@@ -67,12 +69,20 @@ public:
         return which_texture;
     }
 
-    // return the normal from a point on the sphere without using partial derivatives
-    _3d_values get_normal(_3d_values POI) {
-        return (POI - Center) * (-1/R);
+    int get_width() {
+        return ppm_width;
     }
 
-    _2d_values get_texture_coords(_3d_values poi, int width, int height) {
+    int get_height() {
+        return ppm_height;
+    }
+
+    // return the normal from a point on the sphere without using partial derivatives
+    _3d_values get_normal(_3d_values POI) {
+        return (POI - get_center()) * (-1/get_radius());
+    }
+
+    _2d_values get_texture_coords(_3d_values poi, int height, int width) {
         _3d_values c = get_center();
         float r = get_radius();
         float phi = acos((poi.Z-c.Z)/r);
@@ -89,12 +99,12 @@ public:
     // function that checks for ray and sphere intersectiopn based on simple quadratic function
     bool intersect(Ray_Vector& ray, float &t) {
         _3d_values eye = ray.get_origin();                                              // This is based on mapping from points in viewing window
-        _3d_values view_dir = ray.get_direction();                                     // This is constant from file
-        _3d_values x0minusxC = eye - Center;                                          // x0-xc part of equation eye-center of sphere
+        _3d_values view_dir = ray.get_direction().normalize();                                     // This is constant from file
+        _3d_values x0minusxC = eye - get_center();                                          // x0-xc part of equation eye-center of sphere
         float a = 1;                                                                 // A= (xd2+ yd2 +zd2) = 1
-        float b = 2 * x0minusxC.dot(view_dir);                                      // B= 2×(xd×(x0–xc) + yd ×(y0–yc) + zd×(z0–zc))
-        float c = x0minusxC.dot(x0minusxC) - float(pow(R, 2));                      // C= (x0–xc)2 +(y0–yc)2 +(z0–zc)2 –r2
-        float disc = float(pow(b, 2)) - 4*c*a;                                      // discriminant
+        float b = 2 * (x0minusxC.dot(view_dir));                                      // B= 2×(xd×(x0–xc) + yd ×(y0–yc) + zd×(z0–zc))
+        float c = x0minusxC.dot(x0minusxC) - float(pow(get_radius(), 2));                      // C= (x0–xc)2 +(y0–yc)2 +(z0–zc)2 –r2
+        auto disc = float(pow(b, 2) - 4*c*a);                                      // discriminant
 
         // Ignore second intersection of sphere (2 solution cases)
         t = ((-b - sqrt(disc))/2 < (-b + sqrt(disc))/2) ? (-b - sqrt(disc))/2 : (-b + sqrt(disc))/2;
@@ -194,14 +204,15 @@ private:
     _3d_values Vertex1, Vertex2, Vertex3, N_Vertex1, N_Vertex2, N_Vertex3, Face, Color, Spec_Light;
     _2d_values V_T1, V_T2, V_T3;
     float KA, KD, KS, N; // phong model
-    int which_texture;
+    int which_texture, ppm_height, ppm_width;
 public:
     Triangle() {}
     Triangle(_3d_values v1, _3d_values v2, _3d_values v3, _3d_values nv1, _3d_values nv2,
             _3d_values nv3,_3d_values f, _3d_values c, _3d_values s, float ka, float kd,
-            float ks, float n, _2d_values v_t1, _2d_values v_t2, _2d_values v_t3, int w) :
+            float ks, float n, _2d_values v_t1, _2d_values v_t2, _2d_values v_t3, int w, int p_h, int p_w) :
     Vertex1(v1), Vertex2(v2), Vertex3(v3), N_Vertex1(nv1), N_Vertex2(nv2), N_Vertex3(nv3),Face(f), Color(c), Spec_Light(s),
-    KA(ka), KD(kd),KS(ks), N(n), V_T1(v_t1), V_T2(v_t2), V_T3(v_t3), which_texture(w) {}
+    KA(ka), KD(kd),KS(ks), N(n), V_T1(v_t1), V_T2(v_t2), V_T3(v_t3), which_texture(w), ppm_height(p_h), ppm_width(p_w) {}
+
     _3d_values get_v1() {
         return Vertex1;
     }
@@ -245,6 +256,14 @@ public:
         return which_texture;
     }
 
+    int get_width() {
+        return ppm_width;
+    }
+
+    int get_height() {
+        return ppm_height;
+    }
+
     _2d_values get_vt1() {
         return V_T1;
     }_2d_values get_vt2() {
@@ -253,7 +272,7 @@ public:
         return V_T3;
     }
 
-    _2d_values get_texture_coords(_3d_values poi, int width, int height) {
+    _2d_values get_texture_coords(_3d_values poi, int height, int width) {
         _3d_values v1 = get_v1();
         _3d_values v2 = get_v2();
         _3d_values v3 = get_v3();

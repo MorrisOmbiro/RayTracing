@@ -5,20 +5,14 @@ vfov 90
 imsize 800 800
 bkgcolor 0.2 .2 .2
 
-
-
 mtlcolor 1 0 0 .8 .8 .8 .2 1 .4 50
 sphere 2 0 0 .4
 sphere -2 0 0 .4
 
-texture snail.ppm
+texture test.ppm
 sphere 4 0 0 .4
 
 texture snail.ppm
 sphere -4 0 0 .5
-
-
-
-
 
 light 0.0 0.0 -1.0 0.0 1.0 1.0 1.0
