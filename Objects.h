@@ -79,7 +79,7 @@ public:
 
     // return the normal from a point on the sphere without using partial derivatives
     _3d_values get_normal(_3d_values POI) {
-        return (POI - get_center()) * (-1/get_radius());
+        return (POI - get_center()) * (1/R);
     }
 
     _2d_values get_texture_coords(_3d_values poi, int height, int width) {
@@ -89,11 +89,11 @@ public:
         float theta = atan((poi.Y-c.Y)/(poi.X-c.X));
         float u = 0;
         if(theta < 0) {
-            theta += 2*3.14159;
-            u =(float) (theta/(2*3.14159)*(width-1));
+            theta += 2*M_PI;
+            u =(float) (theta/(2*M_PI)*(width-1));
         }else
-            u = (float) ((theta/(2*3.14159))*(width-1));
-        auto v = (float)((phi/3.14159)*(height-1));
+            u = (float) ((theta/(2*M_PI))*(width-1));
+        auto v = (float)((phi/M_PI)*(height-1));
         return _2d_values(u, v);
     }
     // function that checks for ray and sphere intersectiopn based on simple quadratic function

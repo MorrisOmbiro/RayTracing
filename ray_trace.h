@@ -23,7 +23,7 @@ public:
             obj = object;
             for (int i = 0; i < bundle_of_rays; i++) {
                 // try to approximate, including negative numbers so power -1
-                _3d_values rand_point(.1 * (rand()% 100), .1 * (rand()% 100), .1 * (rand()% 100));
+                _3d_values rand_point(epsilon * (rand()% 100), epsilon * (rand()% 100), epsilon * (rand()% 100));
                 // new = old + Epsilon*N
                 _3d_values rand_vec = (rand_point - obj->get_center()).normalize() * obj->get_radius();
                 if(type_light == 0) { // directional light
@@ -37,20 +37,18 @@ public:
                             hit_count++;
                     }
                 }else { // point light
-                    _3d_values shadow_ray = light.get_pos() - (rand_vec + obj->get_center());
-
+                    _3d_values shadow_ray = light.get_pos() - (rand_vec + intersection_point);
                     // check for ray/object intersection points whose positive distance is less than the distance to the light source
-
                     Ray_Vector ray(intersection_point, shadow_ray);
                     if (obj->intersect(ray, k)) { // in shadow
                         _3d_values new_poi = ray.get_origin() + ray.get_direction()*k;
-                        if(abs((new_poi - intersection_point).magnitude()) > epsilon) {} // ignore numerical errors
-                        else
-                            hit_count++;
+                        if(new_poi.magnitude() > shadow_ray.magnitude())
+                                hit_count++;
                     }
                 }
             }
         }
+        cout << hit_count << endl;
         no_hit = hit_count > no_hit ? hit_count : no_hit;
         return 1-no_hit;
     }
@@ -69,7 +67,7 @@ public:
 
         // check for intersection and if so then return the color of the element
         for(Objects* obj: objects) {
-            if (obj->intersect(ray, t)) {
+            if (obj->intersect(ray, t) && t > 0) {
                 if(t_min > t) {
                     o = obj;
                     t_min = t;
@@ -129,20 +127,17 @@ public:
                         }
                     }
                 }else {
-                    _3d_values dir_L = (lights[0].get_pos() - POI).normalize();
                     for (Light l: lights) { // perform summation on Phong illumination equation
                         _3d_values L(0,0,0);
-                        if(l.get_w() != 0) {
-                            L = (POI - l.get_pos()).normalize();
-                        }else {
-                            L = l.get_pos().normalize(); // constant - directional light
-                        }
-                        _3d_values N = o->get_normal(POI).normalize(); // * -1;
+                        if(l.get_w() != 0)
+                            L = (POI - l.get_pos()).normalize()*-1;
+                        else
+                            L = (l.get_pos()).normalize(); // constant - directional light
+
+                        _3d_values N = o->get_normal(POI).normalize();
                         _3d_values H = (L + ray.get_origin()).normalize();
                         float d = L.magnitude();
-                        // normalize view_dir and normal from the sphere
-                        ray_dir = ray_dir.normalize();
-                        // N = N.normalize();
+
                         shadow_strength = shadow(l, POI, objects, t, l.get_w());
                         Triangle* triangle = new Triangle();
                         if(typeid(*o) == typeid(*triangle)) {
@@ -156,11 +151,13 @@ public:
                                 _2d_values tex_coords = o->get_texture_coords(POI, o->get_height(), o->get_width());
                                 _3d_values c = pointer_to_a[o->get_texture()][tex_coords.X][tex_coords.Y];
                                 sum = sum + ((c * kd * fmax(0, (N.dot(L)))) +
-                                             o->get_light() * ks * pow(fmax(0, N.dot(H)), n)) * shadow_strength;
+                                             o->get_light() * ks * pow(fmax(0, N.dot(H)), n));//* shadow_strength;
                             }
                         }else {
                             if(o->get_color().X == 0 && o->get_color().Y == 0 && o->get_color().Z == 0) { // textured sphere
+                                //cout << o-> get_texture() << " PROBLEM";
                                 _2d_values tex_coords = o->get_texture_coords(POI, o->get_height(), o->get_width());
+                                //cout << o-> get_texture() << " PROBLEM";
                                 _3d_values c = pointer_to_a[o->get_texture()][tex_coords.X][tex_coords.Y];
                                 sum = sum + ((c * kd * fmax(0, (N.dot(L)))) +
                                              o->get_light() * ks * pow(fmax(0, N.dot(H)), n)) * shadow_strength;
