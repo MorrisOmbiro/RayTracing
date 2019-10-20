@@ -362,24 +362,4 @@ public:
         return false;
     }
 };
-
-/*Object element: ellipsoid *//*
-class Ellipsoid : public Objects {
-// Encapsulate variables
-private:
-    _3d_values Center, Color;
-    float R_x, R_y, R_z;
-public:
-    // set constructor of eillipsoid
-    Ellipsoid(_3d_values center, float radius_x, float radius_y, float radius_z, _3d_values color) : Center(center), R_x(radius_x),
-                                                                                                     R_y(radius_y), R_z(radius_z), Color(color) {}
-    // return color
-    _3d_values get_color2() {
-        return Color;
-    }
-    // check for ray and ellipsoid intersection
-    bool intersect(Ray_Vector& ray, float &t){
-        _3d_values vect_dist(0, 0, 0);
-    }
-};*/
 #endif
