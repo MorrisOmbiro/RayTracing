@@ -23,7 +23,7 @@ struct _2d_ {
 
 // read these values
 _3d_ eye, viewdir, updir, bkgcolor, mtlcolor, sptcolor, vertex, v_norm, face;
-_2d_ v_t;
+int v_t, v_t2;
 float ka, ks, kd, n;
 // sphere
 struct SphereType {
@@ -66,6 +66,7 @@ _3d_values face_map[1000];
 _2d_values texture_map[1000];
 _3d_values su_normal_pick[1000];
 _3d_values st_normal_pick[1000];
+_3d_values ut_normal_pick[1000];
 _3d_values dt_normal_pick[10000];
 queue<string> textures;
 int cube_count = 0;
@@ -200,20 +201,25 @@ void build_triangle(int state_chooser, _3d_values tri_color, _3d_values tri_spt_
             t.texture_coords.pop();
 
             st_normal_pick[GLOBAL_ST] = normal_picker.front();
-            cout << st_count << endl;
             _3d_values val1 = vector_map[int(face_map[GLOBAL_ST].X) - 1];
             _3d_values val2 = vector_map[int(face_map[GLOBAL_ST].Y) - 1];
             _3d_values val3 = vector_map[int(face_map[GLOBAL_ST].Z) - 1];
             _3d_values nval1 = normal_map[int(st_normal_pick[GLOBAL_ST].X) - 1];
             _3d_values nval2 = normal_map[int(st_normal_pick[GLOBAL_ST].Y) - 1];
             _3d_values nval3 = normal_map[int(st_normal_pick[GLOBAL_ST].Z) - 1];
-            cout << "Normal: " << normal_picker.front().X << " " << normal_picker.front().Y << " " << normal_picker.front().Z << " " << endl;
             _2d_values vt1 = texture_map[(int)texture_picker.front().X - 1];
             _2d_values vt2 = texture_map[(int)texture_picker.front().Y - 1];
             _2d_values vt3 = texture_map[(int)texture_picker.front().Z - 1];
             texture_picker.pop();
             normal_picker.pop();
             // number of triangles to make
+            // Default Phong model values 
+            if(mtl_check == 0) {
+                ka = 0.10;
+                kd =  0.9;
+                ks =  0.55;
+                n = 25.0; 
+            }
             Triangle *triangle = new Triangle(val1, val2, val3, // regular vectors
                                               nval1, nval2, nval3, // normal vectors
                                               _3d_values(face_map[GLOBAL_ST].X, face_map[GLOBAL_ST].Y, face_map[GLOBAL_ST].Z), // face
@@ -240,8 +246,13 @@ void build_triangle(int state_chooser, _3d_values tri_color, _3d_values tri_spt_
             _2d_values vt1(0,0);
             _2d_values vt2(0,0);
             _2d_values vt3(0,0);
-            // number of triangles to make
-            cout << ka << kd << ks << n << endl;
+            // defaults
+            if(mtl_check == 0) {
+                ka = 0.10;
+                kd =  0.9;
+                ks =  0.55;
+                n = 25.0; 
+            }
             Triangle *triangle = new Triangle(val1, val2, val3, // regular vectors
                                               nval1, nval2, nval3, // normal vectors
                                               _3d_values(face_map[GLOBAL_SU].X, face_map[GLOBAL_SU].Y, face_map[GLOBAL_SU].Z), // face
@@ -258,9 +269,8 @@ void build_triangle(int state_chooser, _3d_values tri_color, _3d_values tri_spt_
             face_map[GLOBAL_UT] = t.faces.front();
             t.faces.pop();
 
-            texture_map[GLOBAL_UT] = t.texture_coords.front();
+            texture_map[ut_count-1] = t.texture_coords.front();
             t.texture_coords.pop();
-
             _3d_values val1 = vector_map[int(face_map[GLOBAL_UT].X) - 1];
             _3d_values val2 = vector_map[int(face_map[GLOBAL_UT].Y) - 1];
             _3d_values val3 = vector_map[int(face_map[GLOBAL_UT].Z) - 1];
@@ -270,8 +280,16 @@ void build_triangle(int state_chooser, _3d_values tri_color, _3d_values tri_spt_
             _2d_values vt1 = texture_map[(int)texture_picker.front().X - 1];
             _2d_values vt2 = texture_map[(int)texture_picker.front().Y - 1];
             _2d_values vt3 = texture_map[(int)texture_picker.front().Z - 1];
-
-            // number of triangles to make
+            // defaults
+            if(mtl_check == 0) {
+                ka = 0.30;
+                kd =  0.9;
+                ks =  0.55;
+                n = 25.0; 
+            }
+            cout << vt1.X << " " << vt1.Y << endl;
+            cout << vt2.X << " " << vt2.Y << endl;
+            cout << vt3.X << " " << vt3.Y << endl;
             Triangle *triangle = new Triangle(val1, val2, val3, // regular vectors
                                               nval1, nval2, nval3, // normal vectors
                                               _3d_values(face_map[GLOBAL_UT].X, face_map[GLOBAL_UT].Y, face_map[GLOBAL_UT].Z), // face
@@ -304,6 +322,14 @@ void build_triangle(int state_chooser, _3d_values tri_color, _3d_values tri_spt_
             _2d_values vt1(0,0);
             _2d_values vt2(0,0);
             _2d_values vt3(0,0);
+            
+            // DEFAULTS 
+            if(mtl_check == 0) {
+                ka = 0.10;
+                kd =  0.9;
+                ks =  0.55;
+                n = 25.0; 
+            }
 
             // number of triangles to make
             Triangle *triangle = new Triangle(val1, val2, val3, // regular vectors
@@ -371,7 +397,6 @@ void set_triangle(string coords) {
             if(t.texture_coords.size()!=0) {
                 cout << " Why are we here " << endl;
             }
-            cout << t.texture_coords.size() << " Seg fault" << endl;
             for(int i = 0 ; i < t.texture_coords.size(); i++) {
                 //  t.texture_coords.pop();
             }
@@ -397,7 +422,6 @@ void set_triangle(string coords) {
 
             int d = (elements.at(1).at(0) - 48);int e = (elements.at(2).at(0) - 48);int f = (elements.at(3).at(0) - 48);
             t.faces.push(_3d_values(d, e, f));
-            // t.texture_coords.push(_2d_values(x, y));
             st_count++;
             build_triangle(0, _3d_values(mtlcolor.x*255, mtlcolor.y*255, mtlcolor.z*255), _3d_values(sptcolor.x*255, sptcolor.y*255, sptcolor.z*255));
         }else if((elements.at(1).length() == 3)) { // UNSMOOTH_TEXTURED
@@ -409,7 +433,7 @@ void set_triangle(string coords) {
             int f = (elements.at(3).at(0) - 48);
             t.faces.push(_3d_values(d, e, f));
             ut_count++;
-            build_triangle(1,_3d_values(mtlcolor.x*255, mtlcolor.y*255, mtlcolor.z*255), _3d_values(sptcolor.x*255, sptcolor.y*255, sptcolor.z*255));
+            build_triangle(1 ,_3d_values(mtlcolor.x*255, mtlcolor.y*255, mtlcolor.z*255), _3d_values(sptcolor.x*255, sptcolor.y*255, sptcolor.z*255));
         }else if((elements.at(1)).find("//") != string::npos) { // SMOOTH_UNTEXTURED
             int a = (elements.at(1).at(0) - 48);
             int b = (elements.at(2).at(0) - 48);
@@ -436,10 +460,13 @@ void set_triangle(string coords) {
         normal_map[v_n_count++] = t.normal_vertices.front();
         t.normal_vertices.pop();
     }else if(!strcmp(elements.at(0).c_str(), "vt")) { // check here for more modifications
-        v_t.x = atoi(elements.at(1).c_str());
-        v_t.y = atoi(elements.at(2).c_str());
-        t.texture_coords.push(_2d_values(v_t.x, v_t.y));
-        vt_count++;
+        v_t = stoi(elements.at(1).c_str());
+        v_t2 = stoi(elements.at(2).c_str());
+        cout << "adding " << endl;
+        cout << v_t << " " << v_t2 << endl;
+        t.texture_coords.push(_2d_values(v_t, v_t2));
+        texture_map[vt_count++] = t.texture_coords.front(); 
+        cout << t.texture_coords.front().X << " " << t.texture_coords.front().Y << endl;
     }else {}
 }
 
@@ -613,7 +640,7 @@ void set_ppm(string str_input) {
 
         // initialize pointer
         for(int i =0; i < ppm_width; i++)
-            pointer_to_a[num_of_textures][i] = new _3d_values[ppm_height];
+            pointer_to_a[num_of_textures][i] = new _3d_values[ppm_width];
 
         for(int i  =0 ; i < ppm_width; i++) {
             for (int j = 0; j < ppm_height; j++) {

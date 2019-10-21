@@ -104,12 +104,12 @@ public:
                                (o->get_vt2().X == 0 && o->get_vt2().Y == 0) &&
                                (o->get_vt3().X == 0 && o->get_vt3().Y == 0)) {
                                 sum = sum + ((o->get_color() * kd * fmax(0, (N.dot(L)))) +
-                                             o->get_light() * ks * pow(fmax(0, N.dot(H)), n)) * shadow_strength;
+                                             o->get_light() * ks * pow(fmax(0, N.dot(H)), n));//  * shadow_strength;
                             }else {
                                 _2d_values tex_coords = o->get_texture_coords(POI, o->get_height(), o->get_width());
                                 _3d_values c = pointer_to_a[o->get_texture()][tex_coords.X][tex_coords.Y];
                                 sum = sum + ((c * kd * fmax(0, (N.dot(L)))) +
-                                             o->get_light() * ks * pow(fmax(0, N.dot(H)), n)) * shadow_strength;
+                                             o->get_light() * ks * pow(fmax(0, N.dot(H)), n));// * shadow_strength;
                             }
                         }else {
                             if(o->get_color().X == 0 && o->get_color().Y == 0 && o->get_color().Z == 0) { // textured sphere
@@ -142,12 +142,12 @@ public:
                                (o->get_vt2().X == 0 && o->get_vt2().Y == 0) &&
                                (o->get_vt3().X == 0 && o->get_vt3().Y == 0)) {
                                 sum = sum + ((o->get_color() * kd * fmax(0, (N.dot(L)))) +
-                                             o->get_light() * ks * pow(fmax(0, N.dot(H)), n)) * shadow_strength;
+                                             o->get_light() * ks * pow(fmax(0, N.dot(H)), n));// * shadow_strength;
                             }else {
                                 _2d_values tex_coords = o->get_texture_coords(POI, o->get_height(), o->get_width());
                                 _3d_values c = pointer_to_a[o->get_texture()][tex_coords.X][tex_coords.Y];
                                 sum = sum + ((c * kd * fmax(0, (N.dot(L)))) +
-                                             o->get_light() * ks * pow(fmax(0, N.dot(H)), n)) * shadow_strength;
+                                             o->get_light() * ks * pow(fmax(0, N.dot(H)), n));//* shadow_strength;
                             }
                         }else {
                             if(o->get_color().X == 0 && o->get_color().Y == 0 && o->get_color().Z == 0) { // textured sphere
@@ -175,9 +175,8 @@ public:
                     }else  {
                         _2d_values tex_coords = o->get_texture_coords(POI, o->get_height(), o->get_width());
                         _3d_values c = pointer_to_a[o->get_texture()][tex_coords.X][tex_coords.Y];
-                        // cout << c.X << c.Y << c.Z << endl;
-                        cout << ka << endl;
                         temp_color = (c * ka) + sum;
+
                         // clamp Iλ values to 1
                         color.X = fmin(1, temp_color.X / 255) * 255;
                         color.Y = fmin(1, temp_color.Y / 255) * 255;

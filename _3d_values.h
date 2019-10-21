@@ -80,7 +80,7 @@ public:
     }
     // vector
     _2d_values operator * (_3d_values vector) {
-        return _2d_values(vector.X*X,vector.Y);
+        return _2d_values(vector.X*X,vector.Y*Y);
     }
 };
 
